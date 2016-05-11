@@ -1,9 +1,3 @@
-#todo
-#
-#vert lines draw over horiz lines
-#using global variables too much
-#use different colour for cars
-
 import sys, pygame, numpy, random
 
 pygame.init()
