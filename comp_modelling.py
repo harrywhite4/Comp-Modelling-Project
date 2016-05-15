@@ -15,7 +15,9 @@ clock = pygame.time.Clock()
 black = 0, 0, 0
 white = 255, 255, 255
 gray = 128, 128, 128
-blue = 100, 100, 255
+lightblue = 100, 100, 255
+green = 0, 255, 0
+red = 255, 0, 0
 
 cellSize = 5
 
@@ -27,6 +29,8 @@ spacing = 0
 #stores cars on horizontal roads
 horizCars = numpy.zeros(0)
 vertCars = numpy.zeros(0)
+horizLights = numpy.zeros(0)
+vertLights = numpy.zeros(0)
 
 ruletable = {}
 
@@ -58,17 +62,17 @@ def moveCars():
 
 def initGrid(cellSpacing):
     global length, lines, spacing
-    length = width / cellSize
-    lines = length / cellSpacing
-    spacing = cellSpacing * cellSize
+    length = width / cellSize #in cells
+    lines = length / cellSpacing #number of lines
+    spacing = cellSpacing * cellSize #in pixels
 
-def initArray():
+def initArray(xsize, ysize, num):
 
     array = numpy.zeros((length, lines))
 
-    for i in range(10):
-        x = random.randrange(0, length, 1)
-        y = random.randrange(0, lines, 1)
+    for i in range(num):
+        x = random.randrange(0, xsize, 1)
+        y = random.randrange(0, ysize, 1)
         array[(x,y)] = 1
 
     return array
@@ -84,14 +88,19 @@ def nextStep(i, j,):
         return ruletable[tuple(horizCars[j-1:j+2, i])]
 
 def drawGrid():
-    global horizCars, vertCars
+    global horizCars, vertCars, horizLights, vertLights
 
     start = int((spacing / cellSize) / 2) * cellSize
+    offset = start
 
     newHoriz = numpy.zeros((length, lines))
     newVert = numpy.zeros((length, lines))
 
+
     for i in range(lines): #for each line
+
+
+        lightNum = 0
 
         #draw horizontal line
         pygame.draw.rect(screen, gray, [0, start, width, cellSize])
@@ -108,6 +117,23 @@ def drawGrid():
             if vertCars[(j, i)] == 1:
                 pygame.draw.rect(screen, white, [start, j*cellSize, cellSize, cellSize])
 
+            #if before intersection
+            if (((offset - cellSize)+(lightNum*spacing)) == j*cellSize):
+
+                #draw horizontal light
+                if (horizLights[(lightNum, i)] == 1):
+                    pygame.draw.rect(screen, green, [j*cellSize, start, cellSize, cellSize])
+                else:
+                    pygame.draw.rect(screen, red, [j*cellSize, start, cellSize, cellSize])
+
+                #draw vertical light
+                if (vertLights[(lightNum, i)] == 1):
+                    pygame.draw.rect(screen, green, [start, j*cellSize, cellSize, cellSize])
+                else:
+                    pygame.draw.rect(screen, red, [start, j*cellSize, cellSize, cellSize])
+
+                lightNum += 1
+
             #fill in array at next time step
             newHoriz[(j, i)] = nextStep(i, j)
             newVert[(j, i)] = nextStep(i, j)
@@ -121,9 +147,11 @@ def drawGrid():
 #MAIN
         
 initGrid(15)
-horizCars = initArray()
+horizCars = initArray(length, lines, 10)
 #horizCars[(7, 0)] = 1
-vertCars = initArray()
+vertCars = initArray(length, lines, 10)
+horizLights = initArray(lines, lines, 10)
+vertLights = initArray(lines, lines, 10)
 ruletable = make_table(184)
 
 while True:
