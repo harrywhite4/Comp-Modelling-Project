@@ -1,8 +1,10 @@
 #todo
 #
 #switch to oo design
+#some cars not being drawn in intersection
 
 import sys, pygame, numpy, random
+from pygame.locals import *
 
 pygame.init()
 size = width, height = 600, 600
@@ -33,6 +35,8 @@ horizLights = numpy.zeros(0)
 vertLights = numpy.zeros(0)
 
 ruletable = {}
+stopruletable = {}
+afterrule = {}
 
 #this function was taken from http://greenteapress.com/complexity/CA.py
 def make_table(rule):
@@ -77,7 +81,7 @@ def initArray(xsize, ysize, num):
 
     return array
 
-def nextStep(i, j,):
+def nextStep(i, j):
 
     #calculate next step cell horizontal
     if (j == 0):
@@ -87,7 +91,27 @@ def nextStep(i, j,):
     else:
         return ruletable[tuple(horizCars[j-1:j+2, i])]
 
-def drawGrid():
+def nextStepHoriz(i, j, rule):
+
+    #calculate next step cell horizontal
+    if (j == 0):
+        return rule[(horizCars[length - 1, i], horizCars[j, i], horizCars[j+1, i])]
+    elif (j == length - 1):
+        return rule[(horizCars[j-1, i], horizCars[j, i], horizCars[0, i])]
+    else:
+        return rule[tuple(horizCars[j-1:j+2, i])]
+
+def nextStepVert(i, j, rule):
+
+    #calculate next step cell horizontal
+    if (j == 0):
+        return rule[(vertCars[length - 1, i], vertCars[j, i], vertCars[j+1, i])]
+    elif (j == length - 1):
+        return rule[(vertCars[j-1, i], vertCars[j, i], vertCars[0, i])]
+    else:
+        return rule[tuple(vertCars[j-1:j+2, i])]
+
+def drawGrid(update):
     global horizCars, vertCars, horizLights, vertLights
 
     start = int((spacing / cellSize) / 2) * cellSize
@@ -96,9 +120,7 @@ def drawGrid():
     newHoriz = numpy.zeros((length, lines))
     newVert = numpy.zeros((length, lines))
 
-
     for i in range(lines): #for each line
-
 
         lightNum = 0
 
@@ -123,47 +145,81 @@ def drawGrid():
                 #draw horizontal light
                 if (horizLights[(lightNum, i)] == 1):
                     pygame.draw.rect(screen, green, [j*cellSize, start, cellSize, cellSize])
+
+                    #fill in array at next time step at green light
+                    newHoriz[(j, i)] = nextStepHoriz(i, j, ruletable)
                 else:
                     pygame.draw.rect(screen, red, [j*cellSize, start, cellSize, cellSize])
+
+                    #fill in array at next time step at red light
+                    newHoriz[(j, i)] = nextStepHoriz(i, j, stopruletable)
 
                 #draw vertical light
                 if (vertLights[(lightNum, i)] == 1):
                     pygame.draw.rect(screen, green, [start, j*cellSize, cellSize, cellSize])
+
+                    #fill in array at next time step at green light
+                    newVert[(j, i)] = nextStepVert(i, j, ruletable)
                 else:
                     pygame.draw.rect(screen, red, [start, j*cellSize, cellSize, cellSize])
 
+                    #fill in array at next time step at red light
+                    newVert[(j, i)] = nextStepVert(i, j, stopruletable)
+
                 lightNum += 1
 
-            #fill in array at next time step
-            newHoriz[(j, i)] = nextStep(i, j)
-            newVert[(j, i)] = nextStep(i, j)
+            #if cell is intersection
+            elif (((offset)+((lightNum-1)*spacing)) == j*cellSize):
+
+                #if previous light green
+                if (horizLights[(lightNum-1, i)] == 1):
+                    newHoriz[(j, i)] = nextStepHoriz(i, j, ruletable)
+                else:
+                    newHoriz[(j, i)] = nextStepHoriz(i, j, afterrule)
+
+                #if previous light green
+                if (vertLights[(lightNum-1, i)] == 1):
+                    newVert[(j, i)] = nextStepVert(i, j, ruletable)
+                else:
+                    newVert[(j, i)] = nextStepVert(i, j, afterrule)
+
+            else:
+
+                newHoriz[(j, i)] = nextStepHoriz(i, j, ruletable)
+                newVert[(j, i)] = nextStepVert(i, j, ruletable)
 
         start += spacing
 
-    #update car arrays
-    horizCars = newHoriz
-    vertCars = newVert
+    if (update == True):
+        #update car arrays
+        horizCars = newHoriz
+        vertCars = newVert
 
 #MAIN
         
 initGrid(15)
-horizCars = initArray(length, lines, 10)
-#horizCars[(7, 0)] = 1
-vertCars = initArray(length, lines, 10)
-horizLights = initArray(lines, lines, 10)
-vertLights = initArray(lines, lines, 10)
+horizCars = initArray(length, lines, 30)
+vertCars = initArray(length, lines, 30)
+horizLights = initArray(lines, lines, 20)
+vertLights = initArray(lines, lines, 20)
 ruletable = make_table(184)
+stopruletable = make_table(252)
+afterrule = make_table(136)
 
 while True:
+
+    screen.fill(black)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
-    screen.fill(black)
-
-    drawGrid()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == K_RIGHT:
+                drawGrid(False)
+    
+    drawGrid(True)
     
     pygame.display.flip()
 
