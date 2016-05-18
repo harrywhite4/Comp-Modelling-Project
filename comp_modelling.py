@@ -3,7 +3,7 @@
 #switch to oo design
 #some cars not being drawn in intersection
 
-import sys, pygame, numpy, random
+import sys, pygame, numpy, random, time
 from pygame.locals import *
 
 pygame.init()
@@ -120,15 +120,19 @@ def drawGrid(update):
     newHoriz = numpy.zeros((length, lines))
     newVert = numpy.zeros((length, lines))
 
+    #draw road lines first
     for i in range(lines): #for each line
+
+        #draw horizontal line
+        pygame.draw.rect(screen, gray, [0, start + (spacing * i), width, cellSize])
+        #draw vertical line
+        pygame.draw.rect(screen, gray, [start + (spacing * i), 0, cellSize, height])
+
+    #then draw cars and traffic lights
+    for i in range(lines):
 
         lightNum = 0
 
-        #draw horizontal line
-        pygame.draw.rect(screen, gray, [0, start, width, cellSize])
-        #draw vertical line
-        pygame.draw.rect(screen, gray, [start, 0, cellSize, height])
-        
         for j in range(length): #for each cell
 
             #draw horizontal road cars
@@ -220,7 +224,7 @@ while True:
                 drawGrid(False)
     
     drawGrid(True)
-    
+    time.sleep(1)
     pygame.display.flip()
 
     clock.tick_busy_loop(fps)
