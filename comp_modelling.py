@@ -2,6 +2,7 @@
 #
 #switch to oo design
 #some cars not being drawn in intersection
+#add check on intersection when changing
 
 import sys, pygame, numpy, random
 from pygame.locals import *
@@ -33,10 +34,13 @@ horizCars = numpy.zeros(0)
 vertCars = numpy.zeros(0)
 horizLights = numpy.zeros(0)
 vertLights = numpy.zeros(0)
+offsets = numpy.zeros(0, dtype=float)
 
 ruletable = {}
 stopruletable = {}
 afterrule = {}
+
+counter = 0
 
 #this function was taken from http://greenteapress.com/complexity/CA.py
 def make_table(rule):
@@ -110,6 +114,70 @@ def nextStepVert(i, j, rule):
         return rule[(vertCars[j-1, i], vertCars[j, i], vertCars[0, i])]
     else:
         return rule[tuple(vertCars[j-1:j+2, i])]
+
+def changeLight(horiz, vert, horizx, horizy):
+    global horizLights, vertLights
+
+    if (horiz == 1 and vert == 1):
+        print "can't make both green"
+    else:
+        horizLights[(horizx, horizy)] = horiz
+        vertLights[(horizy, horizx)] = vert
+
+def reverseLight(horizx, horizy):
+    global horizLights, vertLights
+    #maybe save value
+    horizLights[(horizx, horizy)] = 1 - horizLights[(horizx, horizy)]
+    vertLights[(horizy, horizx)] = 1 - vertLights[(horizy, horizx)]
+
+def initOffsets():
+    array = numpy.zeros((lines, lines), dtype=float)
+
+    for i in range(lines):
+        for j in range(lines):
+            array[(i, j)] = getOffset(i, j)
+
+    return array
+
+def initLights():
+    global offsets
+
+    for i in range(lines):
+        for j in range(lines):
+            (xpos, ypos) = getLightPos(i, j)
+            value = ((xpos - ypos)%(period))
+            if (value >= (period / 2)):
+                changeLight(0,1,i,j)
+            else:
+                changeLight(1,0,i,j)
+
+def getOffset(horizLightx, horizLighty):
+    
+    (xpos, ypos) = getLightPos(horizLightx, horizLighty)
+    return ((xpos - ypos)%(period / 2))
+
+def getLightPos(horizLightx, horizLighty):
+    global counter
+
+    gridOffset = int((spacing / cellSize) / 2) * cellSize    
+    xpos = (gridOffset + horizLightx*spacing) / cellSize
+    ypos = (gridOffset + horizLighty*spacing) / cellSize
+
+    return (xpos, ypos)
+
+def updateLights():
+    global counter
+
+    for i in range(lines):
+        for j in range(lines):
+            if (int(offsets[(i,j)]) == counter):
+                reverseLight(i, j)
+
+    if (counter == int(period / 2)):
+        counter = 0
+    else:
+        counter += 1
+
 
 def drawGrid(update):
     global horizCars, vertCars, horizLights, vertLights
@@ -198,10 +266,14 @@ def drawGrid(update):
 #MAIN
         
 initGrid(15)
+period = spacing*2
 horizCars = initArray(length, lines, 30)
 vertCars = initArray(length, lines, 30)
-horizLights = initArray(lines, lines, 20)
-vertLights = initArray(lines, lines, 20)
+horizLights = numpy.zeros((lines, lines))
+vertLights = numpy.zeros((lines, lines))
+offsets = initOffsets()
+initLights()
+
 ruletable = make_table(184)
 stopruletable = make_table(252)
 afterrule = make_table(136)
@@ -220,6 +292,7 @@ while True:
                 drawGrid(False)
     
     drawGrid(True)
+    updateLights()
     
     pygame.display.flip()
 
