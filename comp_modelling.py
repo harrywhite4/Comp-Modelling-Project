@@ -162,7 +162,7 @@ def getCarsWaiting(thresDist, horizLightx, horizLighty):
     return (countH, countV)
 
 #self organising method for updating lights
-def updateLightSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, maxWaitingGreen):
+def updateLightsSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, maxWaitingGreen):
     for i in range(lines):
         for j in range(lines):
             newHoriz = horizLights[(i, j)]
@@ -174,7 +174,7 @@ def updateLightSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, ma
             (waitShortH, waitShortV) = getCarsWaiting(thresDistShort, i, j)
 
             #rule 4
-            if (currVLight == 0 and waitLongH == 0 and waitLong >= 1):
+            if (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
                 newHoriz = 0
                 newVert = 1
             elif (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
@@ -186,23 +186,23 @@ def updateLightSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, ma
                 if (waitShortH < maxWaitingGreen):
                     newHoriz = 1
                     newVert = 0
+
             elif (currVLight == 1):
                 if (waitShortV < maxWaitingGreen):
                     newVert = 1
                     newHoriz = 0
 
             #rule 2
-            horizTimeGreen[(i, j)] += 1
-            vertTimeGreen[(j, i)] += 1
-
-            if (horizTimeGreen[(i, j)] <= minTimeGreen):
-                newHoriz = 1
-                newVert = 0
-
-            if (vertTimeGreen[(i, j)] <= minTimeGreen):
-                newHoriz = 0
-                newVert = 1
-
+            if (currHLight == 1):
+                horizTimeGreen[(i, j)] += 1
+                if (horizTimeGreen[(i, j)] <= minTimeGreen):
+                    newHoriz = 1
+                    newVert = 0
+            elif(currVLight == 1):
+                vertTimeGreen[(j, i)] += 1
+                if (vertTimeGreen[(j, i)] <= minTimeGreen):
+                    newHoriz = 0
+                    newVert = 1
             #rule 1
             if (currHLight == 0 and waitLongH > maxWaitingRed):
                 newHoriz = 1
@@ -211,7 +211,13 @@ def updateLightSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, ma
                 newHoriz = 0
                 newVert = 1
 
+            
             #update
+
+            if (newVert == 0):
+                vertTimeGreen[(j, i)] = 0
+            if (newHoriz == 0):
+                horizTimeGreen[(i, j)] = 0
             horizLights[(i, j)] = newHoriz
             vertLights[(j, i)] = newVert
 
@@ -327,8 +333,8 @@ def drawGrid():
         
 initGrid(15)
 period = spacing*2
-horizCars = initArray(length, lines, 30)
-vertCars = initArray(length, lines, 30)
+horizCars = initArray(length, lines, 200)
+vertCars = initArray(length, lines, 200)
 horizLights = numpy.zeros((lines, lines))
 horizTimeGreen = numpy.zeros((lines, lines))
 vertLights = numpy.zeros((lines, lines))
@@ -357,7 +363,8 @@ while True:
 
     drawUpdateCars(True)
 
-    updateLightsGWave()
+    #updateLightsGWave()
+    updateLightsSO(10, 2, 10, 5, 2)
 
     pygame.display.flip()
 
