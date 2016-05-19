@@ -111,6 +111,7 @@ def nextStepVert(i, j, rule):
     else:
         return rule[tuple(vertCars[j-1:j+2, i])]
 
+
 def drawGrid(update):
     global horizCars, vertCars, horizLights, vertLights
 
