@@ -136,16 +136,87 @@ def getOffset(horizLightx, horizLighty):
 
 #get x, y poistion of intersection (in cell) given indexes in HorizLights
 def getLightPos(horizLightx, horizLighty):
-    global counter
-
     gridOffset = int((spacing / cellSize) / 2) * cellSize    
     xpos = (gridOffset + horizLightx*spacing) / cellSize
     ypos = (gridOffset + horizLighty*spacing) / cellSize
 
     return (xpos, ypos)
 
+def intersectionFree(horizLightx, horizLighty):
+    (xpos, ypos) = getLightPos(horizLightx, horizLighty)
+
+    return (horizCar[(xpos, horizLighty)] == 0 and vertCar[(ypos, horizLightx)] == 0)
+
+def getCarsWaiting(thresDist, horizLightx, horizLighty):
+    (xpos, ypos) = getLightPos(horizLightx, horizLighty)
+    countH = 0
+    countV = 0
+
+    for i in range(thresDist):
+        if (horizCars[(xpos - (1+i), horizLighty)] == 1):
+            countH += 1
+
+        if (vertCars[(ypos - (1+i), horizLightx)] == 1):
+            countV += 1
+
+    return (countH, countV)
+
+#self organising method for updating lights
+def updateLightSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, maxWaitingGreen):
+    for i in range(lines):
+        for j in range(lines):
+            newHoriz = horizLights[(i, j)]
+            newVert = vertLights[(j, i)]
+            currHLight = newHoriz
+            currVLight = newVert
+
+            (waitLongH, waitLongV) = getCarsWaiting(thresDistLong, i, j)
+            (waitShortH, waitShortV) = getCarsWaiting(thresDistShort, i, j)
+
+            #rule 4
+            if (currVLight == 0 and waitLongH == 0 and waitLong >= 1):
+                newHoriz = 0
+                newVert = 1
+            elif (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
+                newHoriz = 1
+                newVert = 0
+
+            #rule 3
+            if (currHLight == 1):
+                if (waitShortH < maxWaitingGreen):
+                    newHoriz = 1
+                    newVert = 0
+            elif (currVLight == 1):
+                if (waitShortV < maxWaitingGreen):
+                    newVert = 1
+                    newHoriz = 0
+
+            #rule 2
+            horizTimeGreen[(i, j)] += 1
+            vertTimeGreen[(j, i)] += 1
+
+            if (horizTimeGreen[(i, j)] <= minTimeGreen):
+                newHoriz = 1
+                newVert = 0
+
+            if (vertTimeGreen[(i, j)] <= minTimeGreen):
+                newHoriz = 0
+                newVert = 1
+
+            #rule 1
+            if (currHLight == 0 and waitLongH > maxWaitingRed):
+                newHoriz = 1
+                newVert = 0
+            elif (currVLight == 0 and waitLongV > maxWaitingRed):
+                newHoriz = 0
+                newVert = 1
+
+            #update
+            horizLights[(i, j)] = newHoriz
+            vertLights[(j, i)] = newVert
+
 #update lights (green wave method)
-def updateLights():
+def updateLightsGWave():
     global counter
 
     for i in range(lines):
@@ -259,7 +330,9 @@ period = spacing*2
 horizCars = initArray(length, lines, 30)
 vertCars = initArray(length, lines, 30)
 horizLights = numpy.zeros((lines, lines))
+horizTimeGreen = numpy.zeros((lines, lines))
 vertLights = numpy.zeros((lines, lines))
+vertTimeGreen = numpy.zeros((lines, lines))
 offsets = initOffsets()
 initLights()
 
@@ -284,7 +357,7 @@ while True:
 
     drawUpdateCars(True)
 
-    updateLights()
+    updateLightsGWave()
 
     pygame.display.flip()
 
