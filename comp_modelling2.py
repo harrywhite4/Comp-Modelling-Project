@@ -80,10 +80,8 @@ def validMove(direction, i, j):
     if (step(j) - (start*2) +1) % (spacing / cellSize) == 0:
         #check if red
         lnum = (step(j) +1) / (spacing / cellSize);
-        print(lnum)
-        print(i)
-        print(vertLights[(lnum, i)])
-        if vertLights[(lnum, i)] == 0 and lnum < lines:
+
+        if lightArray[(lnum, i)] == 0 and lnum < lines:
             return False
 
     return True
@@ -160,8 +158,8 @@ def drawGrid(update):
 initGrid(15)
 horizCars = initArray(length, lines, 30)
 vertCars = initArray(length, lines, 30)
-horizLights = initArray(lines, lines, 20)
-vertLights = initArray(lines, lines, 20)
+horizLights = initArray(lines, lines, lines)
+vertLights = initArray(lines, lines, lines)
 
 while True:
 
