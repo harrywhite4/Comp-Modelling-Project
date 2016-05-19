@@ -1,7 +1,6 @@
 #todo
 #
 #switch to oo design
-#some cars not being drawn in intersection
 #add check on intersection when changing
 
 import sys, pygame, numpy, random, time
@@ -23,23 +22,6 @@ green = 0, 255, 0
 red = 255, 0, 0
 
 cellSize = 5
-
-#variables to define the grid 
-lines = 0
-length = 0
-spacing = 0
-
-#stores cars on horizontal roads
-horizCars = numpy.zeros(0)
-vertCars = numpy.zeros(0)
-horizLights = numpy.zeros(0)
-vertLights = numpy.zeros(0)
-offsets = numpy.zeros(0, dtype=float)
-
-ruletable = {}
-stopruletable = {}
-afterrule = {}
-
 counter = 0
 
 #this function was taken from http://greenteapress.com/complexity/CA.py
@@ -74,9 +56,10 @@ def initGrid(cellSpacing):
     lines = length / cellSpacing #number of lines
     spacing = cellSpacing * cellSize #in pixels
 
+#initialise array with num random 1's 
 def initArray(xsize, ysize, num):
 
-    array = numpy.zeros((length, lines))
+    array = numpy.zeros((xsize, ysize))
 
     for i in range(num):
         x = random.randrange(0, xsize, 1)
@@ -84,16 +67,6 @@ def initArray(xsize, ysize, num):
         array[(x,y)] = 1
 
     return array
-
-def nextStep(i, j):
-
-    #calculate next step cell horizontal
-    if (j == 0):
-        return ruletable[(horizCars[length - 1, i], horizCars[j, i], horizCars[j+1, i])]
-    elif (j == length - 1):
-        return ruletable[(horizCars[j-1, i], horizCars[j, i], horizCars[0, i])]
-    else:
-        return ruletable[tuple(horizCars[j-1:j+2, i])]
 
 def nextStepHoriz(i, j, rule):
 
@@ -115,6 +88,7 @@ def nextStepVert(i, j, rule):
     else:
         return rule[tuple(vertCars[j-1:j+2, i])]
 
+#given index in horizlight array change horiz and vertical lights at the same intersection
 def changeLight(horiz, vert, horizx, horizy):
     global horizLights, vertLights
 
@@ -124,12 +98,14 @@ def changeLight(horiz, vert, horizx, horizy):
         horizLights[(horizx, horizy)] = horiz
         vertLights[(horizy, horizx)] = vert
 
+#given index in horizlight array reverse horiz and vertical lights at the same intersection
 def reverseLight(horizx, horizy):
     global horizLights, vertLights
     #maybe save value
     horizLights[(horizx, horizy)] = 1 - horizLights[(horizx, horizy)]
     vertLights[(horizy, horizx)] = 1 - vertLights[(horizy, horizx)]
 
+#initialise offsets for greenwave light changing method
 def initOffsets():
     array = numpy.zeros((lines, lines), dtype=float)
 
@@ -139,6 +115,7 @@ def initOffsets():
 
     return array
 
+#initialise lights for green wave
 def initLights():
     global offsets
 
@@ -151,11 +128,13 @@ def initLights():
             else:
                 changeLight(1,0,i,j)
 
+#get offset for green wave method
 def getOffset(horizLightx, horizLighty):
     
     (xpos, ypos) = getLightPos(horizLightx, horizLighty)
     return ((xpos - ypos)%(period / 2))
 
+#get x, y poistion of intersection (in cell) given indexes in HorizLights
 def getLightPos(horizLightx, horizLighty):
     global counter
 
@@ -165,6 +144,7 @@ def getLightPos(horizLightx, horizLighty):
 
     return (xpos, ypos)
 
+#update lights (green wave method)
 def updateLights():
     global counter
 
@@ -178,7 +158,9 @@ def updateLights():
     else:
         counter += 1
 
-def drawGrid(update):
+#draw and update cars (for next step) (also draws lights)
+def drawUpdateCars(update):
+
     global horizCars, vertCars, horizLights, vertLights
 
     start = int((spacing / cellSize) / 2) * cellSize
@@ -187,15 +169,7 @@ def drawGrid(update):
     newHoriz = numpy.zeros((length, lines))
     newVert = numpy.zeros((length, lines))
 
-    #draw road lines first
-    for i in range(lines): #for each line
-
-        #draw horizontal line
-        pygame.draw.rect(screen, gray, [0, start + (spacing * i), width, cellSize])
-        #draw vertical line
-        pygame.draw.rect(screen, gray, [start + (spacing * i), 0, cellSize, height])
-
-    #then draw cars and traffic lights
+    #draw cars and traffic lights
     for i in range(lines):
 
         lightNum = 0
@@ -266,6 +240,18 @@ def drawGrid(update):
         horizCars = newHoriz
         vertCars = newVert
 
+def drawGrid():
+    start = int((spacing / cellSize) / 2) * cellSize
+
+    #draw road lines first
+    for i in range(lines): #for each line
+
+        #draw horizontal line
+        pygame.draw.rect(screen, gray, [0, start + (spacing * i), width, cellSize])
+        #draw vertical line
+        pygame.draw.rect(screen, gray, [start + (spacing * i), 0, cellSize, height])
+
+
 #MAIN
         
 initGrid(15)
@@ -292,9 +278,11 @@ while True:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == K_RIGHT:
-                drawGrid(False)
+                drawUpdateCars(False)
     
-    drawGrid(True)
+    drawGrid()
+
+    drawUpdateCars(True)
 
     updateLights()
 
