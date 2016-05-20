@@ -1,7 +1,7 @@
 #todo
 #
 #switch to oo design
-#add check on intersection when changing
+#add check on intersection when changing (not sure if nessesary)
 
 import sys, pygame, numpy, random, time
 from pygame.locals import *
@@ -62,8 +62,14 @@ def initArray(xsize, ysize, num):
     array = numpy.zeros((xsize, ysize))
 
     for i in range(num):
+        #this is horribly inefficient should change later
         x = random.randrange(0, xsize, 1)
         y = random.randrange(0, ysize, 1)
+
+        while (array[(x, y)] != 0):
+            x = random.randrange(0, xsize, 1)
+            y = random.randrange(0, ysize, 1)
+
         array[(x,y)] = 1
 
     return array
@@ -161,8 +167,22 @@ def getCarsWaiting(thresDist, horizLightx, horizLighty):
 
     return (countH, countV)
 
+def getCarsWaitingAhead(thresDist, horizLightx, horizLighty):
+    (xpos, ypos) = getLightPos(horizLightx, horizLighty)
+    countH = 0
+    countV = 0
+
+    for i in range(thresDist):
+        if (horizCars[(xpos + (1+i), horizLighty)] == 1):
+            countH += 1
+
+        if (vertCars[(ypos + (1+i), horizLightx)] == 1):
+            countV += 1
+
+    return (countH, countV)
+
 #self organising method for updating lights
-def updateLightsSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, maxWaitingGreen):
+def updateLightsSO(thresDistLong, thresDistShort, thresDistAhead, minTimeGreen, maxWaitingRed, maxWaitingGreen):
     for i in range(lines):
         for j in range(lines):
             newHoriz = horizLights[(i, j)]
@@ -172,23 +192,42 @@ def updateLightsSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, m
 
             (waitLongH, waitLongV) = getCarsWaiting(thresDistLong, i, j)
             (waitShortH, waitShortV) = getCarsWaiting(thresDistShort, i, j)
+            (waitAheadH, waitAheadV) = getCarsWaitingAhead(thresDistAhead, i, j)
 
-            #rule 4
-            if (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
+            #rule 6
+            if (waitAheadH > 0 and waitAheadV > 0):
+                newHoriz = 0
+                newVert = 0
+            elif (waitAheadH > 0 and waitAheadV == 0):
                 newHoriz = 0
                 newVert = 1
-            elif (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
+            elif (waitAheadV > 0 and waitAheadH == 0):
                 newHoriz = 1
                 newVert = 0
 
+            #rule 5
+            if (currHLight == 1 and waitAheadH > 0):
+                newHoriz = 0
+                newVert = 1
+            elif (currVLight == 1 and waitAheadV > 0):
+                newHoriz = 0
+                newVert = 1
+
+            #rule 4
+            if (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
+                newHoriz = 1
+                newVert = 0
+            elif (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
+                newHoriz = 0
+                newVert = 1
+
             #rule 3
             if (currHLight == 1):
-                if (waitShortH < maxWaitingGreen):
+                if (waitShortH < maxWaitingGreen and waitShortH > 0):
                     newHoriz = 1
                     newVert = 0
-
             elif (currVLight == 1):
-                if (waitShortV < maxWaitingGreen):
+                if (waitShortV < maxWaitingGreen and waitShortV > 0):
                     newVert = 1
                     newHoriz = 0
 
@@ -218,6 +257,7 @@ def updateLightsSO(thresDistLong, thresDistShort, minTimeGreen, maxWaitingRed, m
                 vertTimeGreen[(j, i)] = 0
             if (newHoriz == 0):
                 horizTimeGreen[(i, j)] = 0
+
             horizLights[(i, j)] = newHoriz
             vertLights[(j, i)] = newVert
 
@@ -364,7 +404,7 @@ while True:
     drawUpdateCars(True)
 
     #updateLightsGWave()
-    updateLightsSO(10, 2, 10, 5, 2)
+    updateLightsSO(10, 2, 3, 10, 5, 2)
 
     pygame.display.flip()
 
