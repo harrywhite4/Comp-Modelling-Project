@@ -74,25 +74,25 @@ def initArray(xsize, ysize, num):
 
     return array
 
-def nextStepHoriz(i, j, rule):
+def nextStep(i, j, rule, direc):
 
-    #calculate next step cell horizontal
-    if (j == 0):
-        return rule[(horizCars[length - 1, i], horizCars[j, i], horizCars[j+1, i])]
-    elif (j == length - 1):
-        return rule[(horizCars[j-1, i], horizCars[j, i], horizCars[0, i])]
-    else:
-        return rule[tuple(horizCars[j-1:j+2, i])]
+    if (direc == "H"):
+        #calculate next step cell horizontal
+        if (j == 0):
+            return rule[(horizCars[length - 1, i], horizCars[j, i], horizCars[j+1, i])]
+        elif (j == length - 1):
+            return rule[(horizCars[j-1, i], horizCars[j, i], horizCars[0, i])]
+        else:
+            return rule[tuple(horizCars[j-1:j+2, i])]
 
-def nextStepVert(i, j, rule):
-
-    #calculate next step cell horizontal
-    if (j == 0):
-        return rule[(vertCars[length - 1, i], vertCars[j, i], vertCars[j+1, i])]
-    elif (j == length - 1):
-        return rule[(vertCars[j-1, i], vertCars[j, i], vertCars[0, i])]
-    else:
-        return rule[tuple(vertCars[j-1:j+2, i])]
+    if (direc == "V"):
+        #calculate next step cell vertical
+        if (j == 0):
+            return rule[(vertCars[length - 1, i], vertCars[j, i], vertCars[j+1, i])]
+        elif (j == length - 1):
+            return rule[(vertCars[j-1, i], vertCars[j, i], vertCars[0, i])]
+        else:
+            return rule[tuple(vertCars[j-1:j+2, i])]
 
 #given index in horizlight array change horiz and vertical lights at the same intersection
 def changeLight(horiz, vert, horizx, horizy):
@@ -309,24 +309,24 @@ def drawUpdateCars(update):
                     pygame.draw.rect(screen, green, [j*cellSize, start, cellSize, cellSize])
 
                     #fill in array at next time step at green light
-                    newHoriz[(j, i)] = nextStepHoriz(i, j, ruletable)
+                    newHoriz[(j, i)] = nextStep(i, j, ruletable, "H")
                 else:
                     pygame.draw.rect(screen, red, [j*cellSize, start, cellSize, cellSize])
 
                     #fill in array at next time step at red light
-                    newHoriz[(j, i)] = nextStepHoriz(i, j, stopruletable)
+                    newHoriz[(j, i)] = nextStep(i, j, stopruletable, "H")
 
                 #draw vertical light
                 if (vertLights[(lightNum, i)] == 1):
                     pygame.draw.rect(screen, green, [start, j*cellSize, cellSize, cellSize])
 
                     #fill in array at next time step at green light
-                    newVert[(j, i)] = nextStepVert(i, j, ruletable)
+                    newVert[(j, i)] = nextStep(i, j, ruletable, "V")
                 else:
                     pygame.draw.rect(screen, red, [start, j*cellSize, cellSize, cellSize])
 
                     #fill in array at next time step at red light
-                    newVert[(j, i)] = nextStepVert(i, j, stopruletable)
+                    newVert[(j, i)] = nextStep(i, j, stopruletable, "V")
 
                 lightNum += 1
 
@@ -335,20 +335,20 @@ def drawUpdateCars(update):
 
                 #if previous light green
                 if (horizLights[(lightNum-1, i)] == 1):
-                    newHoriz[(j, i)] = nextStepHoriz(i, j, ruletable)
+                    newHoriz[(j, i)] = nextStep(i, j, ruletable, "H")
                 else:
-                    newHoriz[(j, i)] = nextStepHoriz(i, j, afterrule)
+                    newHoriz[(j, i)] = nextStep(i, j, afterrule, "H")
 
                 #if previous light green
                 if (vertLights[(lightNum-1, i)] == 1):
-                    newVert[(j, i)] = nextStepVert(i, j, ruletable)
+                    newVert[(j, i)] = nextStep(i, j, ruletable, "V")
                 else:
-                    newVert[(j, i)] = nextStepVert(i, j, afterrule)
+                    newVert[(j, i)] = nextStep(i, j, afterrule, "V")
 
             else:
 
-                newHoriz[(j, i)] = nextStepHoriz(i, j, ruletable)
-                newVert[(j, i)] = nextStepVert(i, j, ruletable)
+                newHoriz[(j, i)] = nextStep(i, j, ruletable, "H")
+                newVert[(j, i)] = nextStep(i, j, ruletable, "V")
 
         start += spacing
 
