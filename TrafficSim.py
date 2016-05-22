@@ -15,6 +15,7 @@ class TrafficSim(object):
         self.period = self.spacing*2
         self.horizCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
         self.vertCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
+        self.numVehicles = int(density*self.lines*self.length*2)
         self.fixInitCrashes()
         self.horizLights = numpy.zeros((self.lines, self.lines))
         self.horizTimeGreen = numpy.zeros((self.lines, self.lines))
@@ -28,6 +29,8 @@ class TrafficSim(object):
         self.afterrule = self.make_table(136)
 
         self.counter = 0
+
+        self.cumulativeVelocity = 0.0
 
     #this function was taken from http://greenteapress.com/complexity/CA.py
     def make_table(self, rule):
@@ -159,7 +162,9 @@ class TrafficSim(object):
                 
                 (xpos, ypos) = self.getLightPos(i, j)
 
+                #remove horiz or vert car randomly
                 if (self.horizCars[(xpos, j)] == 1 and self.vertCars[(ypos, i)] == 1):
+                    self.numVehicles -= 1
                     if (random.randrange(0, 1, 1) == 0):
                         self.horizCars[(xpos, j)] == 0
                     else:
@@ -295,6 +300,7 @@ class TrafficSim(object):
 
         start = int((self.spacing / self.cellSize) / 2) * self.cellSize
         offset = start
+        changes = 0.0
 
         newHoriz = numpy.zeros((self.length, self.lines))
         newVert = numpy.zeros((self.length, self.lines))
@@ -347,8 +353,22 @@ class TrafficSim(object):
                     newHoriz[(j, i)] = self.nextStep(i, j, self.ruletable, "H")
                     newVert[(j, i)] = self.nextStep(i, j, self.ruletable, "V")
 
+
+                #update changes
+                if (newHoriz[(j, i)] != self.horizCars[(j, i)]):
+                    changes += 1
+
+                if (newVert[(j, i)] != self.vertCars[(j, i)]):
+                    changes += 1
+
+
             start += self.spacing
 
         #update car arrays
         self.horizCars = newHoriz
         self.vertCars = newVert
+
+        #update velocity
+        velocity = changes / self.numVehicles
+        self.cumulativeVelocity += (changes / self.numVehicles)
+        print velocity
