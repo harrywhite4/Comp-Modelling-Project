@@ -23,8 +23,9 @@ red = 255, 0, 0
 
 cellSize = 5
 cellSpacing = 15
+density = 0.9
 
-sim = TrafficSim(cellSpacing, cellSize, width)
+sim = TrafficSim(cellSpacing, cellSize, width, density)
 
 #draw and update cars (for next step) (also draws lights)
 def drawCars():
@@ -94,8 +95,9 @@ while True:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == K_RIGHT:
-                sim.UpdateCars()
-    
+                #sim.updateCars()
+                #sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+
     drawGrid()
 
     drawCars()

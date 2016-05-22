@@ -6,15 +6,16 @@ import numpy, random
 
 class TrafficSim(object):
 
-    def __init__(self, cellSpacing, cellSize, width):
+    def __init__(self, cellSpacing, cellSize, width, density):
 
 
         self.cellSize = cellSize
 
         self.initGrid(cellSpacing, width)
         self.period = self.spacing*2
-        self.horizCars = self.initArray(self.length, self.lines, 200)
-        self.vertCars = self.initArray(self.length, self.lines, 200)
+        self.horizCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
+        self.vertCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
+        self.fixInitCrashes()
         self.horizLights = numpy.zeros((self.lines, self.lines))
         self.horizTimeGreen = numpy.zeros((self.lines, self.lines))
         self.vertLights = numpy.zeros((self.lines, self.lines))
@@ -62,7 +63,7 @@ class TrafficSim(object):
         array = numpy.zeros((xsize, ysize))
 
         for i in range(num):
-            #this is horribly inefficient should change later
+            #this is horribly inefficient, but seems fast enough
             x = random.randrange(0, xsize, 1)
             y = random.randrange(0, ysize, 1)
 
@@ -148,7 +149,22 @@ class TrafficSim(object):
     def intersectionFree(self, horizLightx, horizLighty):
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
 
-        return (self.horizCar[(xpos, horizLighty)] == 0 and self.vertCar[(ypos, horizLightx)] == 0)
+        return (self.horizCars[(xpos, horizLighty)] == 0 and self.vertCars[(ypos, horizLightx)] == 0)
+
+    #removes one of the "crashed" cars created by initArray
+    def fixInitCrashes(self):
+
+        for i in range(self.lines):
+            for j in range(self.lines):
+                
+                (xpos, ypos) = self.getLightPos(i, j)
+
+                if (self.horizCars[(xpos, j)] == 1 and self.vertCars[(ypos, i)] == 1):
+                    if (random.randrange(0, 1, 1) == 0):
+                        self.horizCars[(xpos, j)] == 0
+                    else:
+                        self.vertCars[(ypos, i)] == 0
+
 
     def getCarsWaiting(self, thresDist, horizLightx, horizLighty):
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
@@ -180,82 +196,86 @@ class TrafficSim(object):
 
     #self organising method for updating lights
     def updateLightsSO(self, thresDistLong, thresDistShort, thresDistAhead, minTimeGreen, maxWaitingRed, maxWaitingGreen):
+
         for i in range(self.lines):
             for j in range(self.lines):
-                newHoriz = self.horizLights[(i, j)]
-                newVert = self.vertLights[(j, i)]
-                currHLight = newHoriz
-                currVLight = newVert
 
-                (waitLongH, waitLongV) = self.getCarsWaiting(thresDistLong, i, j)
-                (waitShortH, waitShortV) = self.getCarsWaiting(thresDistShort, i, j)
-                (waitAheadH, waitAheadV) = self.getCarsWaitingAhead(thresDistAhead, i, j)
+                if (self.intersectionFree(i, j)):
 
-                #rule 6
-                if (waitAheadH > 0 and waitAheadV > 0):
-                    newHoriz = 0
-                    newVert = 0
-                elif (waitAheadH > 0 and waitAheadV == 0):
-                    newHoriz = 0
-                    newVert = 1
-                elif (waitAheadV > 0 and waitAheadH == 0):
-                    newHoriz = 1
-                    newVert = 0
+                    newHoriz = self.horizLights[(i, j)]
+                    newVert = self.vertLights[(j, i)]
+                    currHLight = newHoriz
+                    currVLight = newVert
 
-                #rule 5
-                if (currHLight == 1 and waitAheadH > 0):
-                    newHoriz = 0
-                    newVert = 1
-                elif (currVLight == 1 and waitAheadV > 0):
-                    newHoriz = 0
-                    newVert = 1
+                    (waitLongH, waitLongV) = self.getCarsWaiting(thresDistLong, i, j)
+                    (waitShortH, waitShortV) = self.getCarsWaiting(thresDistShort, i, j)
+                    (waitAheadH, waitAheadV) = self.getCarsWaitingAhead(thresDistAhead, i, j)
 
-                #rule 4
-                if (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
-                    newHoriz = 1
-                    newVert = 0
-                elif (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
-                    newHoriz = 0
-                    newVert = 1
-
-                #rule 3
-                if (currHLight == 1):
-                    if (waitShortH < maxWaitingGreen and waitShortH > 0):
-                        newHoriz = 1
-                        newVert = 0
-                elif (currVLight == 1):
-                    if (waitShortV < maxWaitingGreen and waitShortV > 0):
-                        newVert = 1
+                    #rule 6
+                    if (waitAheadH > 0 and waitAheadV > 0):
                         newHoriz = 0
-
-                #rule 2
-                if (currHLight == 1):
-                    self.horizTimeGreen[(i, j)] += 1
-                    if (self.horizTimeGreen[(i, j)] <= minTimeGreen):
-                        newHoriz = 1
                         newVert = 0
-                elif(currVLight == 1):
-                    self.vertTimeGreen[(j, i)] += 1
-                    if (self.vertTimeGreen[(j, i)] <= minTimeGreen):
+                    elif (waitAheadH > 0 and waitAheadV == 0):
                         newHoriz = 0
                         newVert = 1
-                #rule 1
-                if (currHLight == 0 and waitLongH > maxWaitingRed):
-                    newHoriz = 1
-                    newVert = 0
-                elif (currVLight == 0 and waitLongV > maxWaitingRed):
-                    newHoriz = 0
-                    newVert = 1
+                    elif (waitAheadV > 0 and waitAheadH == 0):
+                        newHoriz = 1
+                        newVert = 0
 
-                
-                #update
-                if (newVert == 0):
-                    self.vertTimeGreen[(j, i)] = 0
-                if (newHoriz == 0):
-                    self.horizTimeGreen[(i, j)] = 0
+                    #rule 5
+                    if (currHLight == 1 and waitAheadH > 0):
+                        newHoriz = 0
+                        newVert = 1
+                    elif (currVLight == 1 and waitAheadV > 0):
+                        newHoriz = 0
+                        newVert = 1
 
-                self.horizLights[(i, j)] = newHoriz
-                self.vertLights[(j, i)] = newVert
+                    #rule 4
+                    if (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
+                        newHoriz = 1
+                        newVert = 0
+                    elif (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
+                        newHoriz = 0
+                        newVert = 1
+
+                    #rule 3
+                    if (currHLight == 1):
+                        if (waitShortH < maxWaitingGreen and waitShortH > 0):
+                            newHoriz = 1
+                            newVert = 0
+                    elif (currVLight == 1):
+                        if (waitShortV < maxWaitingGreen and waitShortV > 0):
+                            newVert = 1
+                            newHoriz = 0
+
+                    #rule 2
+                    if (currHLight == 1):
+                        self.horizTimeGreen[(i, j)] += 1
+                        if (self.horizTimeGreen[(i, j)] <= minTimeGreen):
+                            newHoriz = 1
+                            newVert = 0
+                    elif(currVLight == 1):
+                        self.vertTimeGreen[(j, i)] += 1
+                        if (self.vertTimeGreen[(j, i)] <= minTimeGreen):
+                            newHoriz = 0
+                            newVert = 1
+                    #rule 1
+                    if (currHLight == 0 and waitLongH > maxWaitingRed):
+                        newHoriz = 1
+                        newVert = 0
+                    elif (currVLight == 0 and waitLongV > maxWaitingRed):
+                        newHoriz = 0
+                        newVert = 1
+
+                    
+                    #update
+                    if (newVert == 0):
+                        self.vertTimeGreen[(j, i)] = 0
+                    if (newHoriz == 0):
+                        self.horizTimeGreen[(i, j)] = 0
+
+                    self.horizLights[(i, j)] = newHoriz
+                    self.vertLights[(j, i)] = newVert
 
     #update lights (green wave method)
     def updateLightsGWave(self):
@@ -291,21 +311,17 @@ class TrafficSim(object):
 
                     #horizontal light
                     if (self.horizLights[(lightNum, i)] == 1):
-
                         #fill in array at next time step at green light
                         newHoriz[(j, i)] = self.nextStep(i, j, self.ruletable, "H")
                     else:
-
                         #fill in array at next time step at red light
                         newHoriz[(j, i)] = self.nextStep(i, j, self.stopruletable, "H")
 
                     #vertical light
                     if (self.vertLights[(lightNum, i)] == 1):
-
                         #fill in array at next time step at green light
                         newVert[(j, i)] = self.nextStep(i, j, self.ruletable, "V")
                     else:
-
                         #fill in array at next time step at red light
                         newVert[(j, i)] = self.nextStep(i, j, self.stopruletable, "V")
 
