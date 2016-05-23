@@ -354,10 +354,10 @@ class TrafficSim(object):
 
 
                 #update changes
-                if (newHoriz[(j, i)] != self.horizCars[(j, i)]):
+                if (newHoriz[(j, i)] == 1 and self.horizCars[(j, i)] == 0):
                     changes += 1
 
-                if (newVert[(j, i)] != self.vertCars[(j, i)]):
+                if (newVert[(j, i)] == 1 and self.vertCars[(j, i)] == 0):
                     changes += 1
 
 
