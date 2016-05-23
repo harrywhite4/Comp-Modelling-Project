@@ -370,4 +370,4 @@ class TrafficSim(object):
         #update velocity
         velocity = changes / self.numVehicles
         self.cumulativeVelocity += (changes / self.numVehicles)
-        print velocity
+        #print velocity
