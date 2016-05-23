@@ -25,6 +25,8 @@ cellSize = 5
 cellSpacing = 15
 density = 0.6
 
+step = False
+
 sim = TrafficSim(cellSpacing, cellSize, width, density)
 
 #draw and update cars (for next step) (also draws lights)
@@ -95,17 +97,18 @@ while True:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == K_RIGHT:
-                sim.updateCars()
-                #sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+                if (step):
+                    sim.updateCars()
+                    sim.updateLightsSO(10, 2, 3, 10, 5, 2)
 
     drawGrid()
 
     drawCars()
 
-    sim.updateCars()
-
-    #updateLightsGWave()
-    sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+    if(not step):
+        sim.updateCars()
+        #sim.updateLightsGWave()
+        sim.updateLightsSO(10, 2, 3, 10, 5, 2)
 
     pygame.display.flip()
 

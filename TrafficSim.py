@@ -66,7 +66,6 @@ class TrafficSim(object):
         array = numpy.zeros((xsize, ysize))
 
         for i in range(num):
-            #this is horribly inefficient, but seems fast enough
             x = random.randrange(0, xsize, 1)
             y = random.randrange(0, ysize, 1)
 
@@ -290,10 +289,10 @@ class TrafficSim(object):
                 if (int(self.offsets[(i,j)]) == self.counter):
                     self.reverseLight(i, j)
 
-        if (counter == int(self.period / 2)):
-            counter = 0
+        if (self.counter == int(self.period / 2)):
+            self.counter = 0
         else:
-            counter += 1
+            self.counter += 1
 
     #draw and update cars (for next step) (also draws lights)
     def updateCars(self):
