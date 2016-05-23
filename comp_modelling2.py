@@ -45,6 +45,12 @@ def initArray(xsize, ysize, num):
 
     return array
 
+def initIntersections(xsize, ysize):
+
+    array = [[Intersection() for j in range(ysize)]for i in range(xsize)]
+    
+    return array
+
 def initGrid(cellSpacing):
     global length, lines, spacing
     length = width / cellSize #in cells
@@ -60,6 +66,37 @@ def step(j):
     else:
         return j + 1
 
+class Light(object):
+    green = False
+
+    def __init__(self):
+        green = True
+
+    def setGreen(self, setTo):
+        global green
+        green = setTo
+
+    def getGreen(self):
+        global green
+        return green == True
+
+class Intersection(object):
+    horizLight = Light()
+    vertLight = Light()
+    horiz = False
+
+    def __init__(self):
+        global horiz, horizLight, vertLight
+        horiz = True
+        horizLight = Light()
+        vertLight = Light()
+
+    def switch(self):
+        global horiz, horizLight, vertLight
+        horiz = ~horiz
+        horizLight.setGreen(horiz)
+        vertLight.setGreen(~horiz)
+        print(horizLight.getGreen())
 
 def validMove(direction, i, j):
 
@@ -77,12 +114,12 @@ def validMove(direction, i, j):
         return False
 
     #check if intersection in front
-    if (step(j) - (start*2) +1) % (spacing / cellSize) == 0:
-        #check if red
-        lnum = (step(j) +1) / (spacing / cellSize);
+   # if (step(j) - (start*2) +1) % (spacing / cellSize) == 0:
+    #    #check if red
+    #    lnum = (step(j) +1) / (spacing / cellSize);
 
-        if lightArray[(lnum, i)] == 0 and lnum < lines:
-            return False
+    #    if lightArray[(lnum, i)] == 0 and lnum < lines:
+    #        return False
 
     return True
 
@@ -114,7 +151,7 @@ def updateCars():
     vertCars = newVertCars
 
 def drawGrid(update):
-    global horizCars, vertCars, horizLights, vertLights
+    global horizCars, vertCars, intersections
 
     start = int((spacing / cellSize) / 2) * cellSize
     offset = start
@@ -144,22 +181,25 @@ def drawGrid(update):
 
         for j in range(lines):
 
+
             color = red
-            if horizLights[(j, i)] == 1:
+            if intersections[j][i].horizLight.getGreen():
                 color = green
             pygame.draw.rect(screen, color, [start + j*spacing - cellSize/2, start + i*spacing, cellSize/2, cellSize])
 
             color = red
-            if vertLights[(j, i)] == 1:
+            print(intersections[j][i].vertLight.getGreen())
+            if intersections[j][i].vertLight.getGreen():
                 color = green
             pygame.draw.rect(screen, color, [start + i*spacing, start + j*spacing - cellSize/2, cellSize, cellSize/2])
+            intersections[j][i].switch()
 #MAIN
-        
+       
 initGrid(15)
+intersections = initIntersections(lines, lines)
 horizCars = initArray(length, lines, 30)
 vertCars = initArray(length, lines, 30)
-horizLights = initArray(lines, lines, lines)
-vertLights = initArray(lines, lines, lines)
+
 
 while True:
 
