@@ -12,7 +12,7 @@ class TrafficSim(object):
         self.cellSize = cellSize
 
         self.initGrid(cellSpacing, width)
-        self.period = self.spacing*2
+        self.period = self.spacing*2.0
         self.horizCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
         self.vertCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
         self.numVehicles = int(density*self.lines*self.length*2)
@@ -128,7 +128,7 @@ class TrafficSim(object):
         for i in range(self.lines):
             for j in range(self.lines):
                 (xpos, ypos) = self.getLightPos(i, j)
-                value = ((xpos - ypos)%(self.period))
+                value = ((xpos - ypos)%(self.period)) + 0.5
                 if (value >= (self.period / 2)):
                     self.changeLight(0,1,i,j)
                 else:
@@ -138,7 +138,7 @@ class TrafficSim(object):
     def getOffset(self, horizLightx, horizLighty):
         
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
-        return ((xpos - ypos)%(self.period / 2))
+        return ((xpos - ypos)%(self.period / 2) + 0.5)
 
     #get x, y poistion of intersection (in cell) given indexes in HorizLights
     def getLightPos(self, horizLightx, horizLighty):
