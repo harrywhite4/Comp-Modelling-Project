@@ -68,7 +68,7 @@ class TrafficSim(object):
         self.vertCars = numpy.zeros((self.length, self.lines))
 
         for array in [self.horizCars, self.vertCars]:
-            for i in range(num):
+            for i in range(int(num/2)):
                 Placed = False
 
                 while (Placed == False):
@@ -82,9 +82,10 @@ class TrafficSim(object):
                     if (((x - gridOffset)%gridSpacing == 0)): #if intersection
                         if (self.horizCars[(x, y)] == 1 or self.vertCars[(x, y)] == 1): #if intersection already filled
                             Placed = False
-                            print i
+                            print (i, x, y)
                         else:
                             Placed = True
+                            print "we ok"
 
                 array[(x,y)] = 1
 
@@ -163,23 +164,6 @@ class TrafficSim(object):
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
 
         return (self.horizCars[(xpos, horizLighty)] == 0 and self.vertCars[(ypos, horizLightx)] == 0)
-
-    #removes one of the "crashed" cars created by initArray
-    def fixInitCrashes(self):
-
-        for i in range(self.lines):
-            for j in range(self.lines):
-                
-                (xpos, ypos) = self.getLightPos(i, j)
-
-                #remove horiz or vert car randomly
-                if (self.horizCars[(xpos, j)] == 1 and self.vertCars[(ypos, i)] == 1):
-                    self.numVehicles -= 1
-                    if (random.randrange(0, 1, 1) == 0):
-                        self.horizCars[(xpos, j)] == 0
-                    else:
-                        self.vertCars[(ypos, i)] == 0
-
 
     def getCarsWaiting(self, thresDist, horizLightx, horizLighty):
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
