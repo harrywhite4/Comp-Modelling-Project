@@ -23,7 +23,7 @@ red = 255, 0, 0
 
 cellSize = 5
 cellSpacing = 15
-density = 0.6
+density = 0.8
 
 step = False
 
@@ -107,8 +107,8 @@ while True:
 
     if(not step):
         sim.updateCars()
-        #sim.updateLightsGWave()
-        sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+        sim.updateLightsGWave()
+        #sim.updateLightsSO(10, 2, 3, 10, 5, 2)
 
     pygame.display.flip()
 

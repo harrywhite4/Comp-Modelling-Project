@@ -13,10 +13,9 @@ class TrafficSim(object):
 
         self.initGrid(cellSpacing, width)
         self.period = self.spacing*2.0
-        self.horizCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
-        self.vertCars = self.initArray(self.length, self.lines, int(density*self.length*self.lines))
+        self.initCars(int(density*self.lines*self.length*2))
         self.numVehicles = int(density*self.lines*self.length*2)
-        self.fixInitCrashes()
+        #self.fixInitCrashes()
         self.horizLights = numpy.zeros((self.lines, self.lines))
         self.horizTimeGreen = numpy.zeros((self.lines, self.lines))
         self.vertLights = numpy.zeros((self.lines, self.lines))
@@ -61,21 +60,33 @@ class TrafficSim(object):
         self.spacing = cellSpacing * self.cellSize #in pixels
 
     #initialise array with num random 1's 
-    def initArray(self, xsize, ysize, num):
+    def initCars(self, num):
+        gridOffset = int((self.spacing / self.cellSize) / 2) #in cells
+        gridSpacing = int(self.spacing / self.cellSize) #in cells
 
-        array = numpy.zeros((xsize, ysize))
+        self.horizCars = numpy.zeros((self.length, self.lines))
+        self.vertCars = numpy.zeros((self.length, self.lines))
 
-        for i in range(num):
-            x = random.randrange(0, xsize, 1)
-            y = random.randrange(0, ysize, 1)
+        for array in [self.horizCars, self.vertCars]:
+            for i in range(num):
+                Placed = False
 
-            while (array[(x, y)] != 0):
-                x = random.randrange(0, xsize, 1)
-                y = random.randrange(0, ysize, 1)
+                while (Placed == False):
 
-            array[(x,y)] = 1
+                    x = random.randrange(0, self.length, 1)
+                    y = random.randrange(0, self.lines, 1)
 
-        return array
+                    if (array[(x, y)] == 0):
+                        Placed = True
+
+                    if (((x - gridOffset)%gridSpacing == 0)): #if intersection
+                        if (self.horizCars[(x, y)] == 1 or self.vertCars[(x, y)] == 1): #if intersection already filled
+                            Placed = False
+                            print i
+                        else:
+                            Placed = True
+
+                array[(x,y)] = 1
 
     def nextStep(self, i, j, rule, direc):
 
