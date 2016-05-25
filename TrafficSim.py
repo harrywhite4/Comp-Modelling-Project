@@ -163,6 +163,7 @@ class TrafficSim(object):
 
         return (self.horizCars[(xpos, horizLighty)] == 0 and self.vertCars[(ypos, horizLightx)] == 0)
 
+    #get cars waiting behind a light
     def getCarsWaiting(self, thresDist, horizLightx, horizLighty):
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
         countH = 0
@@ -177,6 +178,7 @@ class TrafficSim(object):
 
         return (countH, countV)
 
+    #get cars waiting ahead of a light
     def getCarsWaitingAhead(self, thresDist, horizLightx, horizLighty):
         (xpos, ypos) = self.getLightPos(horizLightx, horizLighty)
         countH = 0
@@ -295,7 +297,7 @@ class TrafficSim(object):
         else:
             self.counter += 1
 
-    #draw and update cars (for next step) (also draws lights)
+    #update cars for next step
     def updateCars(self):
 
         start = int((self.spacing / self.cellSize) / 2) * self.cellSize
@@ -305,7 +307,6 @@ class TrafficSim(object):
         newHoriz = numpy.zeros((self.length, self.lines))
         newVert = numpy.zeros((self.length, self.lines))
 
-        #draw cars and traffic lights
         for i in range(self.lines):
 
             lightNum = 0
@@ -336,13 +337,13 @@ class TrafficSim(object):
                 #if cell is intersection
                 elif (((offset)+((lightNum-1)*self.spacing)) == j*self.cellSize):
 
-                    #if previous light green
+                    #if previous horiz light green
                     if (self.horizLights[(lightNum-1, i)] == 1):
                         newHoriz[(j, i)] = self.nextStep(i, j, self.ruletable, "H")
                     else:
                         newHoriz[(j, i)] = self.nextStep(i, j, self.afterrule, "H")
 
-                    #if previous light green
+                    #if previous vert light green
                     if (self.vertLights[(lightNum-1, i)] == 1):
                         newVert[(j, i)] = self.nextStep(i, j, self.ruletable, "V")
                     else:

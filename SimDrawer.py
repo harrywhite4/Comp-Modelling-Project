@@ -23,7 +23,7 @@ red = 255, 0, 0
 
 cellSize = 5
 cellSpacing = 15
-density = 0.5
+density = 0.1
 
 step = False
 

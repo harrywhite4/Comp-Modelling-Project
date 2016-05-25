@@ -13,21 +13,27 @@ velEnd = 0.0
 
 selfOrganising = True
 
-for density in numpy.arange(0.05, 0.95, 0.05):
+for method in range(2):
 
-    sim = TrafficSim(cellSpacing, cellSize, width, density)
+    selfOrganising = not SelfOrganising
 
-    for i in range(steps):
+    for runs in range(5):
+        print selfOrganising
+        for density in numpy.arange(0.05, 0.95, 0.05):
 
-        sim.updateCars()
+            sim = TrafficSim(cellSpacing, cellSize, width, density)
 
-        if (selfOrganising):
-            sim.updateLightsSO(10, 5, 2, 10, 40, 2)
-        else:
-            sim.updateLightsGWave()
+            for i in range(steps):
 
-        if (i == 500):
-            velAfterInit = sim.cumulativeVelocity
+                sim.updateCars()
 
-    velEnd = (sim.cumulativeVelocity - velAfterInit) / 500
-    print velEnd
+                if (selfOrganising):
+                    sim.updateLightsSO(10, 5, 2, 10, 40, 2)
+                else:
+                    sim.updateLightsGWave()
+
+                if (i == 500):
+                    velAfterInit = sim.cumulativeVelocity
+
+            velEnd = (sim.cumulativeVelocity - velAfterInit) / 500
+            print velEnd
