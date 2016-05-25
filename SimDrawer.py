@@ -23,7 +23,7 @@ red = 255, 0, 0
 
 cellSize = 5
 cellSpacing = 15
-density = 0.8
+density = 0.5
 
 step = False
 
@@ -99,7 +99,7 @@ while True:
             if event.key == K_RIGHT:
                 if (step):
                     sim.updateCars()
-                    sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+                    sim.updateLightsSO(10, 5, 2, 10, 40, 2)
 
     drawGrid()
 
@@ -107,8 +107,8 @@ while True:
 
     if(not step):
         sim.updateCars()
-        sim.updateLightsGWave()
-        #sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+        #sim.updateLightsGWave()
+        sim.updateLightsSO(10, 5, 2, 10, 40, 2)
 
     pygame.display.flip()
 

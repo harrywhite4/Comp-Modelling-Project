@@ -15,11 +15,11 @@ class TrafficSim(object):
         self.period = self.spacing*2.0
         self.initCars(int(density*self.lines*self.length*2))
         self.numVehicles = int(density*self.lines*self.length*2)
-        #self.fixInitCrashes()
         self.horizLights = numpy.zeros((self.lines, self.lines))
         self.horizTimeGreen = numpy.zeros((self.lines, self.lines))
         self.vertLights = numpy.zeros((self.lines, self.lines))
         self.vertTimeGreen = numpy.zeros((self.lines, self.lines))
+        self.ruleOneCounter = numpy.zeros((self.lines, self.lines))
         self.offsets = self.initOffsets()
         self.initLights()
 
@@ -82,10 +82,8 @@ class TrafficSim(object):
                     if (((x - gridOffset)%gridSpacing == 0)): #if intersection
                         if (self.horizCars[(x, y)] == 1 or self.vertCars[(x, y)] == 1): #if intersection already filled
                             Placed = False
-                            print (i, x, y)
                         else:
                             Placed = True
-                            print "we ok"
 
                 array[(x,y)] = 1
 
@@ -259,12 +257,17 @@ class TrafficSim(object):
                             newHoriz = 0
                             newVert = 1
                     #rule 1
-                    if (currHLight == 0 and waitLongH > maxWaitingRed):
-                        newHoriz = 1
-                        newVert = 0
+                    if (currHLight == 0):
+                        #add to counter
+                        self.ruleOneCounter[(i, j)] += waitLongH
+                        if (self.ruleOneCounter[(i, j)] >= maxWaitingRed):
+                            newHoriz = 1
+                            newVert = 0
                     elif (currVLight == 0 and waitLongV > maxWaitingRed):
-                        newHoriz = 0
-                        newVert = 1
+                        self.ruleOneCounter[(i, j)] += waitLongV
+                        if (self.ruleOneCounter[(i, j)] >= maxWaitingRed):
+                            newHoriz = 0
+                            newVert = 1
 
                     
                     #update
@@ -272,6 +275,10 @@ class TrafficSim(object):
                         self.vertTimeGreen[(j, i)] = 0
                     if (newHoriz == 0):
                         self.horizTimeGreen[(i, j)] = 0
+
+                    #if light changed reset counter
+                    if (newVert != currVLight or newHoriz != currHLight): 
+                        self.ruleOneCounter[(i, j)] = 0
 
                     self.horizLights[(i, j)] = newHoriz
                     self.vertLights[(j, i)] = newVert

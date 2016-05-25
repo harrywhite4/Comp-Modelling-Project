@@ -22,7 +22,7 @@ for density in numpy.arange(0.05, 0.95, 0.05):
         sim.updateCars()
 
         if (selfOrganising):
-            sim.updateLightsSO(10, 2, 3, 10, 5, 2)
+            sim.updateLightsSO(10, 5, 2, 10, 40, 2)
         else:
             sim.updateLightsGWave()
 
