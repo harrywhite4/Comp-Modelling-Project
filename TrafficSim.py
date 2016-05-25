@@ -208,54 +208,6 @@ class TrafficSim(object):
                     (waitShortH, waitShortV) = self.getCarsWaiting(thresDistShort, i, j)
                     (waitAheadH, waitAheadV) = self.getCarsWaitingAhead(thresDistAhead, i, j)
 
-                    #rule 6
-                    if (waitAheadH > 0 and waitAheadV > 0):
-                        newHoriz = 0
-                        newVert = 0
-                    elif (waitAheadH > 0 and waitAheadV == 0):
-                        newHoriz = 0
-                        newVert = 1
-                    elif (waitAheadV > 0 and waitAheadH == 0):
-                        newHoriz = 1
-                        newVert = 0
-
-                    #rule 5
-                    if (currHLight == 1 and waitAheadH > 0):
-                        newHoriz = 0
-                        newVert = 1
-                    elif (currVLight == 1 and waitAheadV > 0):
-                        newHoriz = 0
-                        newVert = 1
-
-                    #rule 4
-                    if (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
-                        newHoriz = 1
-                        newVert = 0
-                    elif (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
-                        newHoriz = 0
-                        newVert = 1
-
-                    #rule 3
-                    if (currHLight == 1):
-                        if (waitShortH < maxWaitingGreen and waitShortH > 0):
-                            newHoriz = 1
-                            newVert = 0
-                    elif (currVLight == 1):
-                        if (waitShortV < maxWaitingGreen and waitShortV > 0):
-                            newVert = 1
-                            newHoriz = 0
-
-                    #rule 2
-                    if (currHLight == 1):
-                        self.horizTimeGreen[(i, j)] += 1
-                        if (self.horizTimeGreen[(i, j)] <= minTimeGreen):
-                            newHoriz = 1
-                            newVert = 0
-                    elif(currVLight == 1):
-                        self.vertTimeGreen[(j, i)] += 1
-                        if (self.vertTimeGreen[(j, i)] <= minTimeGreen):
-                            newHoriz = 0
-                            newVert = 1
                     #rule 1
                     if (currHLight == 0):
                         #add to counter
@@ -269,6 +221,53 @@ class TrafficSim(object):
                             newHoriz = 0
                             newVert = 1
 
+                    #rule 2
+                    if (currHLight == 1):
+                        self.horizTimeGreen[(i, j)] += 1
+                        if (self.horizTimeGreen[(i, j)] <= minTimeGreen):
+                            newHoriz = 1
+                            newVert = 0
+                    elif(currVLight == 1):
+                        self.vertTimeGreen[(j, i)] += 1
+                        if (self.vertTimeGreen[(j, i)] <= minTimeGreen):
+                            newHoriz = 0
+                            newVert = 1
+
+                    #rule 3
+                    if (currHLight == 1):
+                        if (waitShortH < maxWaitingGreen and waitShortH > 0):
+                            newHoriz = 1
+                            newVert = 0
+                    elif (currVLight == 1):
+                        if (waitShortV < maxWaitingGreen and waitShortV > 0):
+                            newVert = 1
+                            newHoriz = 0
+                    #rule 4
+                    if (currHLight == 0 and waitLongV == 0 and waitLongH >= 1):
+                        newHoriz = 1
+                        newVert = 0
+                    elif (currVLight == 0 and waitLongH == 0 and waitLongV >= 1):
+                        newHoriz = 0
+                        newVert = 1
+
+                    #rule 5
+                    if (currHLight == 1 and waitAheadH > 0):
+                        newHoriz = 0
+                        newVert = 1
+                    elif (currVLight == 1 and waitAheadV > 0):
+                        newHoriz = 0
+                        newVert = 1
+
+                    #rule 6
+                    if (waitAheadH > 0 and waitAheadV > 0):
+                        newHoriz = 0
+                        newVert = 0
+                    elif (waitAheadH > 0 and waitAheadV == 0):
+                        newHoriz = 0
+                        newVert = 1
+                    elif (waitAheadV > 0 and waitAheadH == 0):
+                        newHoriz = 1
+                        newVert = 0
                     
                     #update
                     if (newVert == 0):
